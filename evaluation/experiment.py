@@ -1,22 +1,27 @@
-
-
-
 from datasets.physionetdataset import PhysionetDataset
 from processing.segmentepisodesthreshold import SegmentEpisodesThreshold
 from processing.segmentepisodes import SegmentEpisodes
 from warnings import resetwarnings
 from models.model import Classifier
+import json
 import os
 import sys
+
+os.environ.setdefault("MPLBACKEND", "Agg")
+
 import tensorflow as tf
 import numpy as np
 import sklearn
-import wandb
 import seaborn as sns 
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn.preprocessing import label_binarize
 import gc
+
+try:
+    import wandb
+except ImportError:
+    wandb = None
 
 def evaluate_metrics(confusion_matrix):
     # https://stackoverflow.com/questions/31324218/scikit-learn-how-to-obtain-true-positive-true-negative-false-positive-and-fal
@@ -51,7 +56,9 @@ def evaluate_metrics(confusion_matrix):
     results_dict = {"ACC_macro":ACC_macro, "ACC":ACC, "TPR":TPR, "TNR":TNR, "PPV":PPV}
     return ACC, TPR, TNR, PPV, F1, support
 
-wandb_flag = True
+def use_wandb():
+    flag = os.environ.get("ECGDL_USE_WANDB", "0").lower()
+    return flag in {"1", "true", "yes", "on"} and wandb is not None
 
 class Experiment():
     def __init__(self, dataset, transform, freq, input_seconds, model, task, evaluation_strategy, epochs, aggregate = False, save_model = False, episodes = False, max_episode_seconds = 10):
@@ -114,7 +121,7 @@ class Experiment():
         for n in range(self.dataset.n_splits):
             # (look at ptbxl code, basically go through all models for a specific dataset)
             os.makedirs(self.path+os.sep+str(n)+os.sep+"models", exist_ok=True)
-            if wandb_flag:
+            if use_wandb():
                 run = wandb.init(project=self.name, reinit=True, job_type=self.eval)            
                 wandb.run.name = "crossval"+str(n)
                 wandb.run.save()
@@ -226,7 +233,7 @@ class Experiment():
             if self.save:
                 os.makedirs(self.path+os.sep+str(n)+os.sep+"model", exist_ok=True)
                 self.classifier.save(self.path+os.sep+str(n)+os.sep+"model")
-            if wandb_flag:
+            if use_wandb():
                 run.finish()
                 
             distrs_splits.append(np.sum(Y_test, axis=0))
@@ -306,8 +313,8 @@ class Experiment():
                 auc_test_scores.append(auc_test)
                 auc_val_scores.append(auc_val)
 
-                f1_val = sklearn.metrics.f1_score(y_test_agg.argmax(axis=1), y_test_pred_agg.argmax(axis=1), average = 'macro')
-                f1_test = sklearn.metrics.f1_score(y_val_agg.argmax(axis=1), y_val_pred_agg.argmax(axis=1), average = 'macro')
+                f1_test = sklearn.metrics.f1_score(y_test_agg.argmax(axis=1), y_test_pred_agg.argmax(axis=1), average = 'macro')
+                f1_val = sklearn.metrics.f1_score(y_val_agg.argmax(axis=1), y_val_pred_agg.argmax(axis=1), average = 'macro')
 
                 f1_test_scores.append(f1_test)
                 f1_val_scores.append(f1_val)
@@ -324,8 +331,8 @@ class Experiment():
                 auc_test_scores.append(auc_test)
                 auc_val_scores.append(auc_val)
 
-                f1_val = sklearn.metrics.f1_score(y_test.argmax(axis=1), y_test_pred.argmax(axis=1), average = 'macro')
-                f1_test = sklearn.metrics.f1_score(y_val.argmax(axis=1), y_val_pred.argmax(axis=1), average = 'macro')
+                f1_test = sklearn.metrics.f1_score(y_test.argmax(axis=1), y_test_pred.argmax(axis=1), average = 'macro')
+                f1_val = sklearn.metrics.f1_score(y_val.argmax(axis=1), y_val_pred.argmax(axis=1), average = 'macro')
 
                 f1_test_scores.append(f1_test)
                 f1_val_scores.append(f1_val)
@@ -372,5 +379,8 @@ class Experiment():
             sys.stdout = f # Change the standard output to the file we created.
             print(results_dict)
             sys.stdout = original_stdout
+
+        with open(self.path+os.sep+'results.json', 'w') as f:
+            json.dump(results_dict, f, indent=2)
 
         return results_dict

@@ -119,7 +119,7 @@ class RTACNN(tf.keras.layers.Layer):
         self.model_name = "rtacnn"
 
     def get_optimizer(self, lr):
-        return tf.keras.optimizers.Adam(lr=lr) ## 0.0001
+        return tf.keras.optimizers.Adam(learning_rate=lr) ## 0.0001
 
     def build(self, input_shape):
         self.rta1 = RTABlock(16, 32)
@@ -506,5 +506,4 @@ def SENET():
     model = Model(inputs, x)
     
     return model
-
 

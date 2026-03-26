@@ -9,7 +9,6 @@ import subprocess
 import ast
 from scipy.io import loadmat
 import matplotlib.pyplot as plt
-from skmultilearn.model_selection import iterative_train_test_split
 import itertools
 from scipy.signal import resample
 
@@ -132,5 +131,4 @@ class CPSC2018Dataset(Dataset):
         print(y_train.shape)
         print(y_val.shape)
         return X_train, y_train, X_val, y_val, X_test, y_test
-
 

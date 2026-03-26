@@ -1,8 +1,17 @@
 import tensorflow as tf
 import os
 from .metriccallbacks import AUCMetric, F1Metric, TimeHistory
-from wandb.keras import WandbCallback
 import numpy as np
+
+try:
+    from wandb.keras import WandbCallback
+except ImportError:
+    WandbCallback = None
+
+
+def use_wandb():
+    flag = os.environ.get("ECGDL_USE_WANDB", "0").lower()
+    return flag in {"1", "true", "yes", "on"} and WandbCallback is not None
 
 class Classifier(tf.keras.Model):
     def __init__(self, model, input_size, n_classes, learning_rate=0.0001, epochs=20, path="temp"):
@@ -39,7 +48,9 @@ class Classifier(tf.keras.Model):
         time_callback = TimeHistory()
 
         es = tf.keras.callbacks.EarlyStopping(monitor='val_loss', patience=15, restore_best_weights=True)
-        wandb_cb = WandbCallback(save_weights_only=True)
+        callbacks = [es, time_callback]
+        if use_wandb():
+            callbacks.append(WandbCallback(save_weights_only=True))
 
         # x, y = self.transform.process(X=x,labels=y)
 
@@ -47,7 +58,7 @@ class Classifier(tf.keras.Model):
         #log_f1 = F1Metric(train=(x, y), validation=(X_val, y_val), path=self.path+os.sep+"models")
         #log_auc = AUCMetric(train=(x, y), validation=(X_val, y_val), path=self.path+os.sep+"models")
 
-        super(Classifier, self).fit(x, y, validation_data = (X_val, y_val), callbacks = [es, time_callback, wandb_cb], epochs = self.epochs, batch_size=128)
+        super(Classifier, self).fit(x, y, validation_data = (X_val, y_val), callbacks = callbacks, epochs = self.epochs, batch_size=128)
         times = time_callback.times
         return times
     # def predict(self, X, y):
@@ -59,4 +70,3 @@ class Classifier(tf.keras.Model):
     #     agg_preds = self.transform.aggregate_labels(preds)
     #     print(agg_preds.shape)
     #     return agg_preds # always on set level
-

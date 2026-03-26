@@ -50,7 +50,7 @@ class CNN(tf.keras.layers.Layer):
         super().build(input_shape)
 
     def get_optimizer(self, lr):
-        return tf.keras.optimizers.Adam(lr=lr)
+        return tf.keras.optimizers.Adam(learning_rate=lr)
 
     def call(self, x, **kwargs):
         # x = self.reshape(x)
@@ -67,4 +67,3 @@ class CNN(tf.keras.layers.Layer):
     def get_name():
         print("INSIDE GET NAME")
         return 'cnn'
-

@@ -156,7 +156,7 @@ class CPSCWinnerNet(tf.keras.layers.Layer):
         super().build(input_shape)
 
     def get_optimizer(self, lr):
-        return tf.keras.optimizers.Adam(lr=lr)
+        return tf.keras.optimizers.Adam(learning_rate=lr)
 
     def call(self, x, **kwargs):
         x = self.conv1(x) 

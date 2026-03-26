@@ -6,7 +6,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from collections import Counter
 from sklearn.preprocessing import StandardScaler, MultiLabelBinarizer
-from skmultilearn.model_selection import IterativeStratification
 from sklearn.model_selection import StratifiedGroupKFold, StratifiedKFold
 
 # modes: test (everything in one), train-val-test, crossval (2 or 3 parts)
@@ -25,7 +24,7 @@ class Dataset():
 
         self.classes = self.get_classes()
 
-        self.n_splits = 10
+        self.n_splits = self.get_n_splits()
         self.k_fold = StratifiedKFold(n_splits=self.n_splits) #IterativeStratification(n_splits=self.n_splits, order=1) 
         self.strat_group_k_fold = StratifiedGroupKFold(n_splits=self.n_splits)
 
@@ -190,3 +189,10 @@ class Dataset():
         classes.columns = self.class_names
         classes.index = [self.name]
         return classes
+    def get_n_splits(self):
+        raw_value = os.environ.get("ECGDL_N_SPLITS", "10")
+        try:
+            n_splits = int(raw_value)
+        except ValueError:
+            n_splits = 10
+        return max(2, n_splits)

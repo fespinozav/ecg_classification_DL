@@ -94,7 +94,8 @@ class PTBXLDataset(Dataset):
         ## modify this function 
 
         self.labels = compute_label_aggregations(self.raw_labels, self.path, self.classes)
-        data, self.labels, self.Y, _ = select_data(data, self.labels, 'rhythm', 0, self.path+'exprs/data/')
+        selection_task = "form" if self.task in {"aami", "form"} else "rhythm"
+        data, self.labels, self.Y, _ = select_data(data, self.labels, selection_task, 0, self.path+'exprs/data/')
 
 
         # # load and convert annotation data
