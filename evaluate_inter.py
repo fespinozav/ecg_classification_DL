@@ -59,7 +59,7 @@ model = ResNet(num_outputs=num_classes, blocks=[1,1], filters=[32, 64], kernel_s
 inputs = tf.keras.layers.Input((200,1,), dtype='float32')
 m1 = tf.keras.Model(inputs=inputs, outputs=model.call(inputs))
 
-opt = tf.keras.optimizers.Adam(lr=0.0001)
+opt = tf.keras.optimizers.Adam(learning_rate=0.0001)
 
 m1.compile(optimizer=opt,
             #tf.keras.optimizers.Adam(beta_1=0.9, beta_2=0.98, epsilon=1e-9),

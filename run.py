@@ -15,7 +15,7 @@ from datasets.ptbxldataset import PTBXLDataset
 from evaluation.experiment import Experiment 
 import os
 
-os.environ["CUDA_VISIBLE_DEVICES"] ='1'
+#os.environ["CUDA_VISIBLE_DEVICES"] ='1'
 
 
 combinations_dict = {
